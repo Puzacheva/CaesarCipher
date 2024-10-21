@@ -1,56 +1,47 @@
 public class CaesarCipher {
-    private static final String English_Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String Russian_Alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 
-    private String alphabet;
+    public static final String English_Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String Russian_Alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 
-    public CaesarCipher(String language)
+    private final String alphabet;
+
+    public CaesarCipher(String alphabet)
     {
-        if (language.equalsIgnoreCase("english"))
-        {
-            this.alphabet = English_Alphabet;
-        }
-        else if (language.equalsIgnoreCase("русский"))
-        {
-            this.alphabet = Russian_Alphabet;
-        }
-        else
-        {
-            throw new IllegalArgumentException("Неподдерживаемый язык");
-        }
+        this.alphabet = alphabet;
     }
 
-    //Для англ алфавита
+    // Метод шифрования
     public String encrypt(String text, int shift)
     {
-        StringBuilder result = new StringBuilder();
+       return processText(text, shift);
+    }
 
-        for(int i = 0; i < text.length(); i++)
+    // Метод расшифровки
+    public String decrypt(String text, int shift)
+    {
+        return processText(text, -shift);
+    }
+
+    private String processText(String text, int shift)
+    {
+        StringBuilder result = new StringBuilder();
+        shift = shift % alphabet.length();
+        text = text.toUpperCase();
+
+        for (char character : text.toCharArray())
         {
-            char ch = text.charAt(i);
-            int index = alphabet.indexOf(Character.toUpperCase(ch));
-            if (index != -1) {
-                int newIndex = (index + shift) % alphabet.length();
-                result.append(Character.isUpperCase(ch)) ?
-                        aphabet.charAt(mewIndex);
-                Character.toLowerCase(alphabet.charAt(newIndex));
+            int index = alphabet.indexOf(character);
+            if (index != -1)
+            {
+                int newIndex = (index + shift + alphabet.length()) % alphabet.length();
+                result.append(alphabet.charAt(newIndex));
             }
             else
             {
-                result.append(ch);
+                result.append(character);
             }
         }
-        return result.toString;
-    }
-
-    public String decrypt(String text, int shift)
-    {
-        return encrypt(text, alphabet.length() - shift);
-    }
-
-    public boolean isValidShift(int shift)
-    {
-        return shift >= 1 && shift <= alphabet.length() - 1;
+         return  result.toString();
     }
 }
 

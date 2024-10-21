@@ -1,12 +1,14 @@
-import javax.xml.validation.Validator;
 import java.io.File;
-import java.lang.classfile.attribute.SyntheticAttribute;
-import java.util.Locale;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
 public class Main {
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -14,132 +16,121 @@ public class Main {
         String language = scanner.nextLine().toLowerCase();
 
         String alphabet;
-        if (language.equals("english"))
-        {
-            alphabet = CaesarCipher.English_alphabet;
-        }
-        else if (language.equals("русский"))
-        {
-            alphabet = CaesarCipher.Russian_alphabet;
-        }
-        else
-        {
+        if (language.equals("english")) {
+            alphabet = CaesarCipher.English_Alphabet;
+        } else if (language.equals("русский")) {
+            alphabet = CaesarCipher.Russian_Alphabet;
+        } else {
             System.out.println("Неверный выбор языка.");
             return;
         }
 
+
         CaesarCipher caesarCipher = new CaesarCipher(alphabet);
 
-        System.out.println("Выберите действие (1 -шифрование текста, 2 - расшифровка текста):");
-        /*System.out.println("1. Шифрование текста");
-        System.out.println("2. Расшифровка текста");
-        System.out.println("3. Выход");*/
-        int mode = scanner.nextInt();
+        int mode = 0;
+        while (true) {
+            System.out.println("Выберите режим работы (1 -шифрование текста, 2 - расшифровка текста):");
+            try {
+                mode = scanner.nextInt();
+                if (mode != 1 && mode != 2) {
+                    System.out.println("Неверный выбор режима. Введите '1' или '2'.");
+                } else {
+                    break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Ошибка: необходимо ввести число '1' или '2'.");
+                scanner.next();
+            }
+        }
 
         System.out.println("Введите путь к исходному файлу:");
         scanner.nextLine();
         String inputFilePath = scanner.nextLine();
-
-            //int choice = scanner.nextInt();
-            //scanner.nextLine();
 
         if (!new File(inputFilePath).exists()) {
             System.out.println("Файл не существует.");
             return;
         }
 
+        System.out.println("Введите путь для сохранения результата:");
+        String outputFilePath = scanner.nextLine();
 
-
-
-
+        String resultText;
         switch (mode) {
-                case 1:
-                    System.out.println("Введите ключ сдвига для шифрования текста:");
-                    int encryptShift = scanner.nextInt();
+            // Режим шифрования
+            case 1:
+                System.out.println("Вы выбрали шифрование. Введите ключ сдвига:");
+                int encryptShift = scanner.nextInt();
 
-                    if (!Validator.isValidShift(encryptShift, alphabet))
-                    {
-                        System.out.println("Неверный ключ сдвига. Ключ должен быть от 1 до " + (alphabet.length() - 1));
-                        return;
-                    }
+                if (!Validator.isValidShift(encryptShift, alphabet)) {
+                    System.out.println("Неверный ключ сдвига. Ключ должен быть от 1 до " + (alphabet.length() - 1));
+                    return;
+                }
 
-                    scanner.nextLine();
+                String textToEncrypt = readFile(inputFilePath);
+                if (textToEncrypt == null) {
+                    return;
+                }
 
-                    System.out.println("");
-                    break;
-                case 2:
-                    descryptText(scanner, caesarCipher);
-                    break;
-                case 3:
-                    System.out.println("Выход из программы...");
-                    System.exit(0);
-                default:
-                    System.out.println("Неверный выбор. Попробуйте снова.");
+                resultText = caesarCipher.encrypt(textToEncrypt, encryptShift);
 
-            }
+                writeFile(outputFilePath, resultText);
+                System.out.println("Текст успешно зашифрован и сохранен в файл: " + outputFilePath);
+                break;
+
+            // Режим расшифровки
+            case 2:
+                System.out.println("Вы выбрали расшифровку. Введите ключ сдвига:");
+                int decryptShift = scanner.nextInt();
+
+                if (!Validator.isValidShift(decryptShift, alphabet))
+                {
+                    System.out.println("Неверный ключ сдвига. Ключ должен быть от 1 до " + (alphabet.length() - 1));
+                    return;
+                }
+
+                String textToDecrypt = readFile(inputFilePath);
+                if (textToDecrypt == null) {
+                    return;
+                }
+
+                resultText = caesarCipher.decrypt(textToDecrypt, decryptShift);
+
+                writeFile(outputFilePath, resultText);
+                System.out.println("Текст успешно расшифрован и сохранен в файл: " + outputFilePath);
+                break;
+
+
+            /*default:
+                System.out.println("Неверный выбор режима. Попробуйте снова.");*/
         }
     }
 
-    private static void encryptText(Scanner scanner, CaesarCipher caesarCipher) {
-        try {
-            System.out.println("Введите путь к исходному файлу:");
-            String inputFilePath = scanner.nextLine();
-            if (!Validator.fileExists(inputFilePath)) {
-                System.out.println("Файл не существует.");
-                return;
-            }
-
-            System.out.println("Введите ключ сдвига (1-25):");
-            int shift = scanner.nextInt();
-            if (!Validator.isValidShift(shift)) {
-                System.out.println("Неверный ключ. Допустимы значения от 1 до 25.");
-                return;
-            }
-
-            System.out.println("Введите путь для сохранения зашифрованного файла:");
-            String outputFilePath = scanner.nextLine();
-
-            String content = FileHandler.readFile(inputFilePath);
-            String encryptedText = caesarCipher.encrypt(content, shift);
-            FileHandler.writeFile(outputFilePath, encryptedText);
-
-            System.out.println("Текст успешно зашифрован и сохранен в файл:" + outputFilePath);
-        } catch (IOException e) {
-            System.out.println("Произошла ошибка при работе с файлами.");
-        }
-
-        private static void descryptText (Scanner scanner, CaesarCipher caesarCipher)
+    private static String readFile(String filePath)
+    {
+        try
         {
-            try {
-                System.out.println("Введите путь к зашифрованному файлу:");
-                String inputFilePath = scanner.nextLine();
-                if (!Validator.fileExists(inputFilePath)) {
-                    System.out.println("Файл не существует.");
-                    return;
-                }
+            return new String(Files.readAllBytes(Paths.get(filePath)));
+        }
+        catch (IOException e)
+        {
+            System.out.println("Ошибка чтения файла: " + e.getMessage());
+            return null;
+        }
+    }
 
-                System.out.println("Введите ключ сдвига (1-25):");
-                int shift = scanner.nextInt();
-                if (!Validator.isValidShift(shift)) {
-                    System.out.println("Неверный ключ. Допустимы значения от 1 до 25.");
-                    return;
-                }
-
-                System.out.println("Введите путь для сохранения расшифрованного файла:");
-                String outputFilePath = scanner.nextLine();
-
-                if (!caesarCipher.isValidShift(shift)) {
-                    System.out.println("Неверный ключ. Допустимы значения от 1 до 25.");
-                    return;
-                }
-                String content = FileHandler.readFile(inputFilePath);
-                String decryptedText = caesarCipher.decrypt(content, shift);
-                FileHandler.writeFile(outputFilePath, decryptedText);
-
-                System.out.println("Текст успешно расшифрован и сохранен в файл:" + outputFilePath);
-            } catch (IOException e) {
-                System.out.println("Произошла ошибка при работе с файлами.");
-            }
+    private static void writeFile(String filePath, String content)
+    {
+        try
+        {
+            Files.write(Paths.get(filePath), content.getBytes());
+        }
+        catch (IOException e)
+        {
+            System.out.println("Ошибка записи в файл: " + e.getMessage());
         }
     }
 }
+
+
