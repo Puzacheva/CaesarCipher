@@ -43,5 +43,16 @@ public class CaesarCipher {
         }
          return  result.toString();
     }
+
+    public String bruteForceDecrypt(String encryptedText)
+    {
+        StringBuilder allResults = new StringBuilder();
+        for (int shift = 1; shift < alphabet.length(); shift++)
+        {
+            String decryptedText = decrypt(encryptedText, shift);
+            allResults.append("Сдвиг ").append(shift).append(": ").append(decryptedText).append("\n");
+        }
+        return allResults.toString();
+    }
 }
 

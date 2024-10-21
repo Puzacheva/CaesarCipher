@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.InputMismatchException;
@@ -25,21 +24,20 @@ public class Main {
             return;
         }
 
-
         CaesarCipher caesarCipher = new CaesarCipher(alphabet);
 
         int mode = 0;
         while (true) {
-            System.out.println("Выберите режим работы (1 -шифрование текста, 2 - расшифровка текста):");
+            System.out.println("Выберите режим работы (1 -шифрование текста, 2 - расшифровка текста, 3 - расшифровка методом brute force):");
             try {
                 mode = scanner.nextInt();
-                if (mode != 1 && mode != 2) {
-                    System.out.println("Неверный выбор режима. Введите '1' или '2'.");
+                if (mode != 1 && mode != 2 && mode != 3) {
+                    System.out.println("Неверный выбор режима. Введите '1', '2'или '3'.");
                 } else {
                     break;
                 }
             } catch (InputMismatchException e) {
-                System.out.println("Ошибка: необходимо ввести число '1' или '2'.");
+                System.out.println("Ошибка: необходимо ввести число '1', '2' или '3'.");
                 scanner.next();
             }
         }
@@ -101,9 +99,16 @@ public class Main {
                 System.out.println("Текст успешно расшифрован и сохранен в файл: " + outputFilePath);
                 break;
 
+            case 3:
+                String textToBruteForce = readFile(inputFilePath);
+                if (textToBruteForce == null) {
+                    return;
+                }
 
-            /*default:
-                System.out.println("Неверный выбор режима. Попробуйте снова.");*/
+                resultText = caesarCipher.bruteForceDecrypt(textToBruteForce);
+                writeFile(outputFilePath, resultText);
+                System.out.println("Результат расшифровки сохранен в файл: " + outputFilePath);
+                break;
         }
     }
 
